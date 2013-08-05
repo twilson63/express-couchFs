@@ -4,7 +4,7 @@ var express = require('express')
 var app = express();
 
 module.exports = function(config) {
-  var db = nano(config.couchDb);
+  var db = nano(config.couch);
 
   app.get('/api/file/:name', function(req, res) {
     db.attachment.get(req.params.name, 'file').pipe(res);
