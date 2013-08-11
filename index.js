@@ -1,13 +1,18 @@
 var fs = require('fs');
 var nano = require('nano');
-var express = require('express')
+var express = require('express');
+var mime = require('mime');
+
 var app = express();
 
 module.exports = function(config) {
   var db = nano(config.couch);
 
   app.get('/api/file/:name', function(req, res) {
-    db.attachment.get(req.params.name, 'file').pipe(res);
+    db.attachment.get(req.params.name, 'file', function(err, body) {
+      res.writeHead(200, {'Content-Type': mime.lookup(req.params.name) })
+      res.end(body);
+    });
   });
 
   // handle file upload
