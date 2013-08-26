@@ -19,19 +19,21 @@ module.exports = function(config) {
   app.post('/api/file', function(req, res) {
     var meta = {
       name: req.files.uploadFile.name,
-      type: req.files.uploadFile.type,
+      type: 'file',
+      mime: req.files.uploadFile.type,
       size: req.files.uploadFile.size
     };
 
     var filename = req.files.uploadFile.name;
     db.insert(meta, attachFile);
+
     function attachFile(err, body) {
-      if (err) { return res.send(err); }
+      if (err) { return res.send(500, err); }
       fs.readFile(req.files.uploadFile.path, function(err, data) {
-        if (err) { return res.send(err); }
+        if (err) { return res.send(500, err); }
         db.attachment.insert(body.id, 'file', data, meta.type, 
           { rev: body.rev }, function(e,b) {
-            if (e) { return res.send(e); }
+            if (e) { return res.send(500, e); }
             res.send(b);
           })
       });
