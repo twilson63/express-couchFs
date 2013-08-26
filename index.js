@@ -24,13 +24,12 @@ module.exports = function(config) {
     };
 
     var filename = req.files.uploadFile.name;
-    var docname = 'file_' + filename;
-    db.insert(meta, docname, attachFile);
+    db.insert(meta, attachFile);
     function attachFile(err, body) {
       if (err) { return res.send(err); }
       fs.readFile(req.files.uploadFile.path, function(err, data) {
         if (err) { return res.send(err); }
-        db.attachment.insert(docname, 'file', data, meta.type, 
+        db.attachment.insert(body.id, 'file', data, meta.type, 
           { rev: body.rev }, function(e,b) {
             if (e) { return res.send(e); }
             res.send(b);
