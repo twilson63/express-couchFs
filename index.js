@@ -9,9 +9,17 @@ module.exports = function(config) {
   var db = nano(config.couch);
 
   app.get('/api/file/:name', function(req, res) {
-    db.attachment.get(req.params.name, 'file', function(err, body) {
-      res.writeHead(200, {'Content-Type': mime.lookup(req.params.name) })
-      res.end(body);
+    db.get(req.params.name, function(e, doc) {
+      var headers = {'Content-Type': doc.mime};
+      if (!/png|jpg|gif/.test(doc.mime)) {
+        headers['Content-Disposition'] = 'attachment; filename="' + doc.name + '"';
+      }
+      // file type -- as mime type
+      //Content-Disposition: attachment; filename="fname.ext"
+      db.attachment.get(req.params.name, 'file', function(err, body) {
+        res.writeHead(200, headers);
+        res.end(body);
+      });
     });
   });
 
