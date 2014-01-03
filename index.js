@@ -23,7 +23,7 @@ module.exports = function(config) {
     }
   }
 
-  app.get('/api/file/:name', function(req, res) {
+  app.get('/:name', function(req, res) {
     getDb(req).get(req.params.name, function(e, doc) {
       var headers = {'Content-Type': doc.mime};
       if (!/png|jpg|gif/.test(doc.mime)) {
@@ -39,7 +39,7 @@ module.exports = function(config) {
   });
 
   // handle file upload
-  app.post('/api/file', function(req, res) {
+  app.post('/', function(req, res) {
     var meta = {
       name: req.files.uploadFile.name,
       type: 'file',
@@ -64,7 +64,7 @@ module.exports = function(config) {
   });
 
   // app del file
-  app.del('/api/file/:name', function(req, res) {
+  app.del('/:name', function(req, res) {
     getDb(req).get(req.params.name, function(err, body) {
       getDb(req).destroy(req.params.name, body._rev).pipe(res);
     });

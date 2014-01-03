@@ -18,7 +18,7 @@ describe('Core Api', function() {
 
         before(function(done) {
             app.use(express.bodyParser());
-            app.use(couchFs({couch: db_url}));
+            app.use('/api/file', couchFs({couch: db_url}));
             server = app.listen(3000);
 
             request.put(db_url, done);
@@ -46,7 +46,7 @@ describe('Core Api', function() {
               req[db_request_parameter] = db_name;
               next();
             });
-            app.use(couchFs({
+            app.use('/api/file',couchFs({
                 url: couchUrl, 
                 database_parameter_name: db_request_parameter 
             }));
