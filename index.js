@@ -25,6 +25,7 @@ module.exports = function(config) {
 
   app.get('/:name', function(req, res) {
     getDb(req).get(req.params.name, function(e, doc) {
+      if (e) { return res.send(e.status_code, e); }
       var headers = {'Content-Type': doc.mime};
       if (!/png|jpg|gif/.test(doc.mime)) {
         headers['Content-Disposition'] = 'attachment; filename="' + doc.name + '"';
@@ -32,6 +33,7 @@ module.exports = function(config) {
       // file type -- as mime type
       //Content-Disposition: attachment; filename="fname.ext"
       getDb(req).attachment.get(req.params.name, 'file', function(err, body) {
+        if (err) { return res.send(err.status_code, err); }
         res.writeHead(200, headers);
         res.end(body);
       });
@@ -39,7 +41,7 @@ module.exports = function(config) {
   });
 
   // handle file upload
-  app.post('/', function(req, res) {
+  app.post('/', express.multipart(), function(req, res) {
     var meta = {
       name: req.files.uploadFile.name,
       type: 'file',
@@ -66,6 +68,7 @@ module.exports = function(config) {
   // app del file
   app.del('/:name', function(req, res) {
     getDb(req).get(req.params.name, function(err, body) {
+      if (err) { return res.send(err.status_code, err); }
       getDb(req).destroy(req.params.name, body._rev).pipe(res);
     });
   });

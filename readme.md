@@ -14,7 +14,7 @@ npm install express-couchFs --save
 var couchFs = require('express-couchdb-fs');
 
 app.configure(function() {
-  app.use('/api/endpoint', couchFs({couch: 'http://localhost:5984/fs'}));
+  app.use('/api/file', couchFs({couch: 'http://localhost:5984/fs'}));
 });
 ```
 
@@ -26,7 +26,7 @@ the database to use. The `database_parameter_name` is optional and will default
 to `"COUCH_DB"`. 
 
 ``` js
-app.use('/api/endpoint', couchFs({url: 'http://localhost:5984/', database_parameter_name: 'COUCH_DB' }));
+app.use('/api/file', couchFs({url: 'http://localhost:5984/', database_parameter_name: 'COUCH_DB' }));
 ```
 
 ## API
