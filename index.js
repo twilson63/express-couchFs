@@ -8,8 +8,19 @@ module.exports = function(config) {
 
   var server, db;
 
-  if (config.couch) {
+  if (config.couch && !config.couch_username ) {
     db = nano(config.couch);
+  } else if (config.couch_username && config.couch_password) {
+    db = nano({
+      url: config.users,
+      request_defaults: {
+        auth: {
+          username: config.couch_username,
+          password: config.couch_password
+        },
+        strictSSL: false
+      }
+    });
   } else {
     server = nano(config.url);
     db = config.database_parameter_name || 'COUCH_DB';
