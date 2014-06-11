@@ -8,8 +8,14 @@ module.exports = function(config) {
 
   var server, db;
 
-  if (config.couch) {
+  if (config.couch && !config.request_defaults ) {
     db = nano(config.couch);
+  } else if (config.request_defaults) {
+    server = nano({
+      url: config.url,
+      request_defaults: config.request_defaults
+    });
+    db = config.database_parameter_name || 'COUCH_DB';
   } else {
     server = nano(config.url);
     db = config.database_parameter_name || 'COUCH_DB';
@@ -56,7 +62,7 @@ module.exports = function(config) {
       if (err) { return res.send(500, err); }
       fs.readFile(req.files.uploadFile.path, function(err, data) {
         if (err) { return res.send(500, err); }
-        getDb(req).attachment.insert(body.id, 'file', data, meta.type, 
+        getDb(req).attachment.insert(body.id, 'file', data, meta.type,
           { rev: body.rev }, function(e,b) {
             if (e) { return res.send(500, e); }
             res.send(b);
@@ -72,6 +78,6 @@ module.exports = function(config) {
       getDb(req).destroy(req.params.name, body._rev).pipe(res);
     });
   });
-  
+
   return app;
 };
