@@ -17,7 +17,7 @@
   "readmeFilename": "readme.md",
   "dependencies": {
     "express": "~3.2.6",
-    "nano": "~3.3.8",
+    "nano": "~5.10.0",
     "mime": "~1.2.10"
   },
   "devDependencies": {
