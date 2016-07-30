@@ -12,6 +12,10 @@ nock('http://localhost:5984')
   .delete('/files/bar?rev=1')
   .reply(200, { ok: true });
 
+nock('http://localhost:5984')
+  .get('/files/foo')
+  .reply(404, { error: 'not found'});
+
 describe('CouchFs DELETE /:name', function() {
   it('should be successful', function(done) {
     req(app)

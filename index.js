@@ -30,12 +30,14 @@ module.exports = function(config) {
   }
 
   app.get('/:name', function(req, res) {
+    var disposition = req.query.inline ? 'inline' : 'attachment';
     getDb(req).get(req.params.name, function(e, doc) {
       if (e) { return res.send(e.status_code, e); }
-      var headers = {'Content-Type': doc.mime};
-      if (!/png|jpg|gif/.test(doc.mime)) {
-        headers['Content-Disposition'] = 'attachment; filename="' + doc.name + '"';
-      }
+
+      var headers = {
+        'Content-Type': doc.mime,
+        'Content-Disposition': disposition + '; filename="' + doc.name + '"'
+      };
       // file type -- as mime type
       //Content-Disposition: attachment; filename="fname.ext"
       getDb(req).attachment.get(req.params.name, 'file', function(err, body) {
