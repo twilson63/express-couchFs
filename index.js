@@ -29,10 +29,27 @@ module.exports = function(config) {
     }
   }
 
+  // nano responds with entire request_defaults object. Let's prevent our
+  // credentials from making it all the way to the client
+  function sanitizeError(err) {
+    // console.log(err);
+    var redactKeys = ['auth', 'uri'];
+    redactKeys.forEach(function(k) {
+      if (err.request[k]) {
+        err.request[k] = undefined;
+      }
+      if (err.headers[k]) {
+        err.headers[k] = undefined;
+      }
+    });
+
+    return err;
+  }
+
   app.get('/:name', function(req, res) {
     var disposition = req.query.inline ? 'inline' : 'attachment';
     getDb(req).get(req.params.name, function(e, doc) {
-      if (e) { return res.send(e.status_code, e); }
+      if (e) { return res.send(e.status_code, sanitizeError(e)); }
 
       var headers = {
         'Content-Type': doc.mime,
@@ -41,7 +58,7 @@ module.exports = function(config) {
       // file type -- as mime type
       //Content-Disposition: attachment; filename="fname.ext"
       getDb(req).attachment.get(req.params.name, 'file', function(err, body) {
-        if (err) { return res.send(err.status_code, err); }
+        if (err) { return res.send(err.status_code, sanitizeError(err)); }
         res.writeHead(200, headers);
         res.end(body);
       });
@@ -61,12 +78,12 @@ module.exports = function(config) {
     getDb(req).insert(meta, attachFile);
 
     function attachFile(err, body) {
-      if (err) { return res.send(500, err); }
+      if (err) { return res.send(500, sanitizeError(err)); }
       fs.readFile(req.files.uploadFile.path, function(err, data) {
-        if (err) { return res.send(500, err); }
+        if (err) { return res.send(500, sanitizeError(err)); }
         getDb(req).attachment.insert(body.id, 'file', data, meta.type,
           { rev: body.rev }, function(e,b) {
-            if (e) { return res.send(500, e); }
+            if (e) { return res.send(500, sanitizeError(e)); }
             res.send(b);
           })
       });
@@ -76,7 +93,7 @@ module.exports = function(config) {
   // app del file
   app.del('/:name', function(req, res) {
     getDb(req).get(req.params.name, function(err, body) {
-      if (err) { return res.send(err.status_code, err); }
+      if (err) { return res.send(err.status_code, sanitizeError(err)); }
       getDb(req).destroy(req.params.name, body._rev).pipe(res);
     });
   });
