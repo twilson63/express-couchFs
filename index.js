@@ -9,6 +9,14 @@ var multer = require('multer')
 var upload = multer({ dest: '/tmp' })
 const { path } = require('ramda')
 
+/**
+ * couchFS
+ *
+ * CouchFS is a file server based middleware for expressJS
+ *
+ * @param {object} config - configuration object for nano couchdb connection see https://github.com/apache/couchdb-nano#configuration
+ *
+ */
 module.exports = function(config) {
   var app = express()
 
@@ -27,6 +35,13 @@ module.exports = function(config) {
     db = config.database_parameter_name || 'COUCH_DB'
   }
 
+  /**
+   * getDb
+   *
+   * returns current db or grabs db from request
+   *
+   * @param {object} req - express request object
+   */
   function getDb(req) {
     if (typeof db === 'object') {
       return db
@@ -35,8 +50,18 @@ module.exports = function(config) {
     }
   }
 
+  // helmet adds some security protection for express api servers
   app.use(helmet())
 
+  /**
+   * @swagger
+   * /{name}:
+   *   get:
+   *     description: Downloads file, inline or as attachment
+   *     responses:
+   *       200:
+   *         description: successful response
+   */
   app.get('/:name', async function(req, res) {
     var disposition = req.query.inline ? 'inline' : 'attachment'
 
@@ -57,7 +82,15 @@ module.exports = function(config) {
     }
   })
 
-  // handle file upload
+  /**
+   * @swagger
+   * /:
+   *   post:
+   *     description: Uploads file as an attachment to couchdb
+   *     responses:
+   *       200:
+   *         description: successful response
+   */
   app.post('/', upload.single('uploadFile'), async function(req, res) {
     var meta = {
       name: req.file.originalname,
@@ -84,7 +117,15 @@ module.exports = function(config) {
     }
   })
 
-  // app del file
+  /**
+   * @swagger
+   * /:
+   *   delete:
+   *     description: removes couchdb document
+   *     responses:
+   *       200:
+   *         description: successful response
+   */
   app.delete('/:name', async function(req, res) {
     try {
       const db = getDb(req)
