@@ -7,7 +7,16 @@ var express = require('express')
 var mime = require('mime')
 var multer = require('multer')
 var upload = multer({ dest: '/tmp' })
+const { path } = require('ramda')
 
+/**
+ * couchFS
+ *
+ * CouchFS is a file server based middleware for expressJS
+ *
+ * @param {object} config - configuration object for nano couchdb connection see https://github.com/apache/couchdb-nano#configuration
+ *
+ */
 module.exports = function(config) {
   var app = express()
 
@@ -26,6 +35,13 @@ module.exports = function(config) {
     db = config.database_parameter_name || 'COUCH_DB'
   }
 
+  /**
+   * getDb
+   *
+   * returns current db or grabs db from request
+   *
+   * @param {object} req - express request object
+   */
   function getDb(req) {
     if (typeof db === 'object') {
       return db
@@ -34,33 +50,47 @@ module.exports = function(config) {
     }
   }
 
-  // nano responds with entire request_defaults object. Let's prevent our
-  // credentials from making it all the way to the client
-  function sanitizeError(err) {
-    // console.log(err);
-    var redactKeys = ['auth', 'uri']
-    redactKeys.forEach(function(k) {
-      if (err.request[k]) {
-        err.request[k] = undefined
-      }
-      if (err.headers[k]) {
-        err.headers[k] = undefined
-      }
-    })
-
-    return err
-  }
-
+  // helmet adds some security protection for express api servers
   app.use(helmet())
 
-  app.get('/:name', function(req, res) {
+  /**
+   * @swagger
+   * /{name}:
+   *   get:
+   *     description: Downloads file, inline or as attachment
+   *     responses:
+   *       200:
+   *         description: successful response
+   */
+  app.get('/:name', async function(req, res) {
     var disposition = req.query.inline ? 'inline' : 'attachment'
+
     const db = getDb(req)
-    const s = db.attachment.getAsStream(req.params.name, 'file')
-    s.pipe(res)
+    const doc = await db
+      .get(req.params.name)
+      .catch(() => ({ name: 'file not found' }))
+    res.set(
+      'Content-Disposition',
+      disposition + '; filename="' + doc.name + '"'
+    )
+    if (path(['_attachments', 'file'], doc)) {
+      const s = db.attachment.getAsStream(req.params.name, 'file')
+      s.on('error', e => {})
+      s.pipe(res)
+    } else {
+      return res.status(404).send({ error: 'file not found' })
+    }
   })
 
-  // handle file upload
+  /**
+   * @swagger
+   * /:
+   *   post:
+   *     description: Uploads file as an attachment to couchdb
+   *     responses:
+   *       200:
+   *         description: successful response
+   */
   app.post('/', upload.single('uploadFile'), async function(req, res) {
     var meta = {
       name: req.file.originalname,
@@ -87,7 +117,15 @@ module.exports = function(config) {
     }
   })
 
-  // app del file
+  /**
+   * @swagger
+   * /:
+   *   delete:
+   *     description: removes couchdb document
+   *     responses:
+   *       200:
+   *         description: successful response
+   */
   app.delete('/:name', async function(req, res) {
     try {
       const db = getDb(req)
