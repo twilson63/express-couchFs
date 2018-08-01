@@ -1,6 +1,5 @@
 const test = require('tape')
 const request = require('supertest')
-// const url = 'https://files:files@twilson63.jrscode.cloud/files'
 const url = 'http://localhost:5984/files'
 const app = require('../')({ couch: url })
 
