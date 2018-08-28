@@ -2,6 +2,7 @@ var fs = require('fs')
 const helmet = require('helmet')
 const util = require('util')
 const readFile = util.promisify(fs.readFile)
+const condis = require('content-disposition')
 var nano = require('nano')
 var express = require('express')
 var mime = require('mime')
@@ -69,10 +70,9 @@ module.exports = function(config) {
     const doc = await db
       .get(req.params.name)
       .catch(() => ({ name: 'file not found' }))
-    res.set(
-      'Content-Disposition',
-      disposition + '; filename="' + doc.name + '"'
-    )
+
+    res.set('Content-Disposition', condis(doc.name, { type: disposition }))
+    
     if (path(['_attachments', 'file'], doc)) {
       const s = db.attachment.getAsStream(req.params.name, 'file')
       s.on('error', e => {})
