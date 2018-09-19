@@ -1,6 +1,6 @@
 {
   "name": "express-couchdb-fs",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "An express module that adds a couchDb file service api to any express app.",
   "main": "index.js",
   "scripts": {
