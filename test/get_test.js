@@ -26,7 +26,7 @@ nock('http://localhost:5984')
 
 nock('http://localhost:5984')
   .get('/files/6f280dcbbc27bc80dabd4ea0e80027ff/file')
-  .reply(200, response)
+  .replyWithFile(200, __dirname + '/fixtures/spaghetti-code.jpg')
 
 nock('http://localhost:5984')
   .get('/files/6f280dcbbc27bc80dabd4ea0e80027ffa')
@@ -53,6 +53,7 @@ test('get image', t => {
         res.headers['content-disposition'],
         'attachment; filename="bar.jpg"'
       )
+      t.equals(res.headers['content-type'], 'image/jpeg')
       t.equals(res.statusCode, 200)
       t.end()
     })
@@ -64,6 +65,7 @@ test('get image inline', t => {
     .query({ inline: true })
     .then(res => {
       t.equals(res.headers['content-disposition'], 'inline; filename="foo.jpg"')
+
       t.equals(res.statusCode, 200)
       t.end()
     })

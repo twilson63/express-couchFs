@@ -8,7 +8,7 @@ var express = require('express')
 var mime = require('mime')
 var multer = require('multer')
 var upload = multer({ dest: '/tmp' })
-const { path, propOr } = require('ramda')
+const { path, propOr, merge } = require('ramda')
 
 /**
  * couchFS
@@ -71,17 +71,18 @@ module.exports = function(config) {
       .get(req.params.name)
       .catch(() => ({ name: 'file not found' }))
 
-    res.set({
-      'Content-Type': propOr(
-        mime.getType(doc.name) || 'application/octletstream',
-        'mime',
-        doc
-      ),
-      'Content-Disposition': condis(doc.name, { type: disposition })
-    })
-
     if (path(['_attachments', 'file'], doc)) {
       const s = db.attachment.getAsStream(req.params.name, 'file')
+      s.on('response', function(res) {
+        res.headers = merge(res.headers, {
+          'Content-Type': propOr(
+            mime.getType(doc.name) || 'application/octlet-stream',
+            'mime',
+            doc
+          ),
+          'Content-Disposition': condis(doc.name, { type: disposition })
+        })
+      })
       s.on('error', e => {})
       s.pipe(res)
     } else {
@@ -102,7 +103,7 @@ module.exports = function(config) {
     var meta = {
       name: req.file.originalname,
       type: 'file',
-      mime: req.file.mimetype,
+      mime: mime.getType(req.file.originalname),
       size: req.file.size
     }
 
