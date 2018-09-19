@@ -71,7 +71,10 @@ module.exports = function(config) {
       .get(req.params.name)
       .catch(() => ({ name: 'file not found' }))
 
-    res.set('Content-Disposition', condis(doc.name, { type: disposition }))
+    res.set({
+      'Content-Disposition': condis(doc.name, { type: disposition }),
+      'Content-Type': doc.mime
+    })
     
     if (path(['_attachments', 'file'], doc)) {
       const s = db.attachment.getAsStream(req.params.name, 'file')
